@@ -69,6 +69,8 @@ import org.acegisecurity.Authentication;
 import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
+import org.jenkinsci.plugins.matrixauth.AuthorizationType;
+import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Header;
 import org.kohsuke.stapler.HttpRedirect;
@@ -957,7 +959,7 @@ public class OpenShiftOAuth2SecurityRealm extends SecurityRealm implements Seria
 
             synchronized (USER_UPDATE_LOCK) {
                 GlobalMatrixAuthorizationStrategy existingAuthMgr = (GlobalMatrixAuthorizationStrategy) Jenkins
-                        .getInstance().getAuthorizationStrategy();
+                        .get().getAuthorizationStrategy();
                 Set<String> usersGroups = existingAuthMgr.getGroups();
 
                 if (LOGGER.isLoggable(Level.FINE))
@@ -1008,13 +1010,13 @@ public class OpenShiftOAuth2SecurityRealm extends SecurityRealm implements Seria
                         for (String role : allowedRoles) {
                             List<Permission> perms = cfgedRolePermMap.get(role);
                             for (Permission perm : perms) {
-                                newAuthMgr.add(perm, matrixKey);
+                                newAuthMgr.add(perm, new PermissionEntry(AuthorizationType.USER, matrixKey));
                             }
                         }
 
-                        Jenkins.getInstance().setAuthorizationStrategy(newAuthMgr);
+                        Jenkins.get().setAuthorizationStrategy(newAuthMgr);
                         try {
-                            Jenkins.getInstance().save();
+                            Jenkins.get().save();
                         } catch (Throwable t) {
                             // see https://jenkins.io/blog/2018/03/15/jep-200-lts/#after-the-upgrade
                             // running on 2.107 ... seen intermittent errors here, even after
